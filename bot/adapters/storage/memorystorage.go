@@ -187,13 +187,14 @@ func (storage *memoryStorage) buildIndex(keys []string) map[string][]int {
 		close(channel)
 	}()
 
-	result, ok := mr.MapReduce(func(source chan interface{}) {
+	result, err := mr.MapReduce(func(source chan<- interface{}) {
 		chunks := splitStrings(keys, chunkSize)
 		for i := range chunks {
 			source <- chunks[i]
 		}
 	}, storage.mapper, storage.reducer)
-	if !ok {
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
 		return nil
 	}
 
@@ -299,7 +300,7 @@ func (storage *memoryStorage) generateSearchResults(ids []int) []string {
 	return result
 }
 
-func (storage *memoryStorage) mapper(data interface{}, writer mr.Writer, cancel func()) {
+func (storage *memoryStorage) mapper(data interface{}, writer mr.Writer, cancel func(error)) {
 	indexes := make(map[string][]int)
 	chunk := data.(*keyChunk)
 
@@ -331,7 +332,7 @@ func (storage *memoryStorage) mapper(data interface{}, writer mr.Writer, cancel 
 	writer.Write(indexes)
 }
 
-func (storage *memoryStorage) reducer(input chan interface{}, writer mr.Writer, cancel func()) {
+func (storage *memoryStorage) reducer(input <-chan interface{}, writer mr.Writer, cancel func(error)) {
 	indexes := make(map[string]map[int]struct{})
 	for each := range input {
 		chunkIndexes := each.(map[string][]int)

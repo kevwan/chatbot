@@ -95,8 +95,8 @@ func (match *closestMatch) processExactMatch(responses map[string]int) []Answer 
 }
 
 func (match *closestMatch) processSimilarMatch(text string) []Answer {
-	result, ok := mr.MapReduce(generator(match, text), mapper(match), reducer(match))
-	if !ok {
+	result, err := mr.MapReduce(generator(match, text), mapper(match), reducer(match))
+	if err != nil{
 		return nil
 	}
 
@@ -146,7 +146,7 @@ func (top *topOccurAnswers) put(answer string, occurrence int) {
 }
 
 func generator(match *closestMatch, text string) mr.GenerateFunc {
-	return func(source chan interface{}) {
+	return func(source chan<- interface{}) {
 		keys := match.storage.Search(text)
 		if match.verbose {
 			printMatches(keys)
@@ -163,7 +163,7 @@ func generator(match *closestMatch, text string) mr.GenerateFunc {
 }
 
 func mapper(match *closestMatch) mr.MapperFunc {
-	return func(data interface{}, writer mr.Writer, cancel func()) {
+	return func(data interface{}, writer mr.Writer, cancel func(error)) {
 		tops := newTopScoreQuestions(match.tops)
 		pair := data.(sourceAndTargets)
 		for i := range pair.targets {
@@ -179,7 +179,7 @@ func mapper(match *closestMatch) mr.MapperFunc {
 }
 
 func reducer(match *closestMatch) mr.ReducerFunc {
-	return func(input chan interface{}, writer mr.Writer, cancel func()) {
+	return func(input <-chan interface{}, writer mr.Writer, cancel func(error)) {
 		tops := newTopScoreQuestions(match.tops)
 		for each := range input {
 			qs := each.(*topScoreQuestions)
