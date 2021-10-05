@@ -25,5 +25,6 @@
 # corpus files
 data
 **/*.corpus.json
+**/*.yml
 **/*.gob
 **/stopwords.txt
