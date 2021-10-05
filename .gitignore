@@ -15,12 +15,15 @@
 **/.DS_Store
 **/logs
 
-# ignore adhoc test code
-**/adhoc
-
 # gitlab ci
 .cache
 
 # vim auto backup file
 *~
 !OWNERS
+
+# corpus files
+data
+**/*.corpus.json
+**/*.gob
+**/stopwords.txt
