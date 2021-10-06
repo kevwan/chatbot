@@ -13,11 +13,10 @@ import (
 	"github.com/kevwan/chatbot/bot/adapters/storage"
 )
 
-const tops = 5
-
 var (
 	verbose   = flag.Bool("v", false, "verbose mode")
 	storeFile = flag.String("c", "corpus.gob", "the file to store corpora")
+	tops      = flag.Int("t", 5, "the number of answers to return")
 )
 
 func main() {
@@ -29,7 +28,7 @@ func main() {
 	}
 
 	chatbot := &bot.ChatBot{
-		LogicAdapter: logic.NewClosestMatch(store, tops),
+		LogicAdapter: logic.NewClosestMatch(store, *tops),
 	}
 	if *verbose {
 		chatbot.LogicAdapter.SetVerbose()
@@ -46,13 +45,17 @@ func main() {
 
 		startTime := time.Now()
 		answers := chatbot.GetResponse(question)
-		for i, answer := range answers {
-			fmt.Printf("%d: %s\n", i+1, answer.Content)
-			if *verbose {
-				fmt.Printf("%d: %s\tConfidence: %.3f\t%s\n", i+1, answer.Content,
-					answer.Confidence, time.Since(startTime))
+		if *tops == 1 {
+			fmt.Printf("A: %s\n", answers[0].Content)
+		} else {
+			for i, answer := range answers {
+				fmt.Printf("%d: %s\n", i+1, answer.Content)
+				if *verbose {
+					fmt.Printf("%d: %s\tConfidence: %.3f\t%s\n", i+1, answer.Content,
+						answer.Confidence, time.Since(startTime))
+				}
 			}
+			fmt.Println(time.Since(startTime))
 		}
-		fmt.Println(time.Since(startTime))
 	}
 }
