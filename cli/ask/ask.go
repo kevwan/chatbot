@@ -45,17 +45,23 @@ func main() {
 
 		startTime := time.Now()
 		answers := chatbot.GetResponse(question)
+		if len(answers) == 0 {
+			fmt.Println("No answer!")
+			continue
+		}
+
 		if *tops == 1 {
 			fmt.Printf("A: %s\n", answers[0].Content)
-		} else {
-			for i, answer := range answers {
-				fmt.Printf("%d: %s\n", i+1, answer.Content)
-				if *verbose {
-					fmt.Printf("%d: %s\tConfidence: %.3f\t%s\n", i+1, answer.Content,
-						answer.Confidence, time.Since(startTime))
-				}
-			}
-			fmt.Println(time.Since(startTime))
+			continue
 		}
+
+		for i, answer := range answers {
+			fmt.Printf("%d: %s\n", i+1, answer.Content)
+			if *verbose {
+				fmt.Printf("%d: %s\tConfidence: %.3f\t%s\n", i+1, answer.Content,
+					answer.Confidence, time.Since(startTime))
+			}
+		}
+		fmt.Println(time.Since(startTime))
 	}
 }

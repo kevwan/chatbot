@@ -29,10 +29,13 @@ func main() {
 	var corporaFiles string
 	if len(files) > 0 {
 		corporaFiles = strings.Join(files, ",")
+		if len(*corpora) > 0 {
+			corporaFiles = strings.Join([]string{corporaFiles, *corpora}, ",")
+		}
+	} else {
+		corporaFiles = *corpora
 	}
-	if len(*corpora) > 0 {
-		corporaFiles = strings.Join([]string{corporaFiles, *corpora}, ",")
-	}
+
 	if len(corporaFiles) == 0 {
 		flag.Usage()
 		return
