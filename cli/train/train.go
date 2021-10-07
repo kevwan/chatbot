@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	corpora       = flag.String("i", "", "the corpora files, comma to separate multiple files")
 	dir           = flag.String("d", "", "the directory to look for corpora files")
+	corpora       = flag.String("i", "", "the corpora files, comma to separate multiple files")
 	storeFile     = flag.String("o", "corpus.gob", "the file to store corpora")
 	printMemStats = flag.Bool("m", false, "enable printing memory stats")
 )
