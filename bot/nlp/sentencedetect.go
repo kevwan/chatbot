@@ -8,16 +8,16 @@ import (
 )
 
 var (
-	endQuestionChars = map[rune]lang.PlaceholderType{
-		'?': lang.Placeholder,
-		'？': lang.Placeholder,
-		'吗': lang.Placeholder,
-		'么': lang.Placeholder,
-	}
-
 	embededQuestionMarks = []string{
 		"什么", "为何", "干嘛", "干吗", "怎么", "咋",
 	}
+
+	endQuestionChars = createSet([]rune{
+		'?',
+		'？',
+		'吗',
+		'么',
+	})
 )
 
 func IsQuestion(sentence string) bool {
@@ -42,6 +42,14 @@ func IsQuestion(sentence string) bool {
 	}
 
 	return false
+}
+
+func createSet(items []rune) map[rune]lang.PlaceholderType {
+	ret := make(map[rune]lang.PlaceholderType)
+	for _, item := range items {
+		ret[item] = lang.Placeholder
+	}
+	return ret
 }
 
 func isAscii(s string) bool {
