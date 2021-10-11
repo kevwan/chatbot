@@ -65,3 +65,7 @@ The `MapReduce` implementation of `go-zero in `core/mr` package gives `chatbot` 
 ChatterBot - https://github.com/gunthercox/ChatterBot
 
 I was using `ChatterBot` at first, but it responds too slow, so I decided to implement it myself. Thanks to ChatterBot, great project!
+
+## Give a Star! ⭐
+
+If you like or are using this project to learn or start your solution, please give it a star. Thanks!
