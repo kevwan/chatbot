@@ -60,7 +60,7 @@ bot: That is good to hear
 
 go-zero - https://github.com/zeromicro/go-zero
 
-The `MapReduce` implementation of `go-zero in `core/mr` package gives `chatbot` a huge performance boost!
+The `MapReduce` implementation of `go-zero` in `core/mr` package gives `chatbot` a huge performance boost!
 
 ChatterBot - https://github.com/gunthercox/ChatterBot
 
