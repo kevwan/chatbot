@@ -2,6 +2,7 @@ package nlp
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/tal-tech/go-zero/core/lang"
 )
@@ -20,6 +21,11 @@ var (
 )
 
 func IsQuestion(sentence string) bool {
+	// we don't check whether question or not in English
+	if isAscii(sentence) {
+		return false
+	}
+
 	chars := []rune(strings.TrimSpace(sentence))
 	if len(chars) == 0 {
 		return false
@@ -36,4 +42,14 @@ func IsQuestion(sentence string) bool {
 	}
 
 	return false
+}
+
+func isAscii(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] > unicode.MaxASCII {
+			return false
+		}
+	}
+
+	return true
 }
