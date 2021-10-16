@@ -13,6 +13,8 @@ import (
 
 var (
 	dir           = flag.String("d", "", "the directory to look for corpora files")
+	sqliteDB      = flag.String("sqlite3", "/Users/dev/repo/chatbot/chatbot.db", "the file path of the corpus sqlite3")
+	project      = flag.String("project", "DMS", "the name of the project in sqlite3 db")
 	corpora       = flag.String("i", "", "the corpora files, comma to separate multiple files")
 	storeFile     = flag.String("o", "corpus.gob", "the file to store corpora")
 	printMemStats = flag.Bool("m", false, "enable printing memory stats")
@@ -36,7 +38,7 @@ func main() {
 		corporaFiles = *corpora
 	}
 
-	if len(corporaFiles) == 0 {
+	if len(corporaFiles) == 0 && *sqliteDB == "" {
 		flag.Usage()
 		return
 	}
@@ -51,8 +53,14 @@ func main() {
 		Trainer:        bot.NewCorpusTrainer(store),
 		StorageAdapter: store,
 	}
-	if err := chatbot.Train(strings.Split(corporaFiles, ",")); err != nil {
-		log.Fatal(err)
+	if *sqliteDB != "" {
+		if err := chatbot.TrainWithSqite(*sqliteDB,*project); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		if err := chatbot.Train(strings.Split(corporaFiles, ",")); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
