@@ -137,21 +137,27 @@ func (chatbot *ChatBot) SaveCorpusToDB(corpuses map[string][][]string) {
 					Qtype:    1,
 					Project:  chatbot.Config.Project,
 				}
-				chatbot.AddCorpus(corpus)
+				chatbot.AddCorpus(&corpus)
 			}
 		}
 	}
 
 }
 
-func (chatbot *ChatBot) AddCorpus(corpus Corpus) error {
+func (chatbot *ChatBot) AddCorpus(corpus *Corpus) error {
 	q := Corpus{
 		Question: corpus.Question,
 		Class:    corpus.Class,
 	}
 	if ok, err := engine.Get(&q); !ok {
-		_, err = engine.Insert(&corpus)
+		_, err = engine.Insert(corpus)
 		return err
+	} else {
+		if q.Id > 0 {
+			corpus.Id = q.Id
+			_, err = engine.Update(corpus, &Corpus{Id: q.Id})
+			return err
+		}
 	}
 	return nil
 }

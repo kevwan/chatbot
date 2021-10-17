@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kevwan/chatbot/bot"
 	"github.com/kevwan/chatbot/bot/adapters/logic"
@@ -63,17 +64,17 @@ func bindRounter(router *gin.Engine) {
 	v1 := router.Group("v1")
 	v1.POST("add", func(context *gin.Context) {
 		var corpus bot.Corpus
+
 		context.Bind(&corpus)
-		err := chatbot.AddCorpus(corpus)
+		err := chatbot.AddCorpus(&corpus)
 		if err != nil {
 			context.JSON(500, JsonResult{
-				Code: 500,
-				Msg:  err.Error(),
+				Msg: err.Error(),
 			})
 			return
 		}
 		answer := make(map[string]int)
-		answer[corpus.Answer] = 1
+		answer[fmt.Sprintf("%s$$$$%s", corpus.Question, corpus.Answer)] = 1
 		chatbot.StorageAdapter.Update(corpus.Question, answer)
 		chatbot.StorageAdapter.BuildIndex()
 		context.JSON(200, JsonResult{

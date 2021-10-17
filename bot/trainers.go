@@ -44,6 +44,10 @@ func (trainer *ConversationTrainer) Train(data interface{}) error {
 		return errors.New("ConversationTrainer.Train needs arguments to be []string")
 	}
 
+	if len(sentences) == 2 {
+		sentences[1] = fmt.Sprintf("%s$$$%s", sentences[0], sentences[1])
+	}
+
 	var history string
 	for _, sentence := range sentences {
 		sentence = strings.TrimSpace(sentence)
