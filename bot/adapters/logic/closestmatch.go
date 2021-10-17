@@ -27,6 +27,7 @@ type (
 	}
 
 	answerAndOccurrence struct {
+		question string
 		answer     string
 		occurrence int
 	}

@@ -12,6 +12,7 @@ import (
 type (
 	Trainer interface {
 		Train(interface{}) error
+		TrainWithCorpus(corpuses map[string][][]string) error
 	}
 
 	ConversationTrainer struct {
@@ -66,6 +67,19 @@ func NewCorpusTrainer(storage storage.StorageAdapter) *CorpusTrainer {
 	return &CorpusTrainer{
 		storage: storage,
 	}
+}
+
+func (trainer *CorpusTrainer) TrainWithCorpus(corpuses map[string][][]string) error {
+
+	convTrainer := NewConversationTrainer(trainer.storage)
+
+	for _, convs := range corpuses {
+		for _, conv := range convs {
+			convTrainer.Train(conv)
+		}
+	}
+	trainer.storage.BuildIndex()
+	return nil
 }
 
 func (trainer *CorpusTrainer) Train(data interface{}) error {

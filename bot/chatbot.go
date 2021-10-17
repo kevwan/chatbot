@@ -1,11 +1,13 @@
 package bot
 
 import (
-	"database/sql"
 	"fmt"
-	"github.com/kevwan/chatbot/bot/adapters/input"
+	"github.com/go-xorm/xorm"
+	"github.com/kevwan/chatbot/bot/corpus"
+	"path/filepath"
+
+	//"github.com/jinzhu/gorm"
 	"github.com/kevwan/chatbot/bot/adapters/logic"
-	"github.com/kevwan/chatbot/bot/adapters/output"
 	"github.com/kevwan/chatbot/bot/adapters/storage"
 	_ "github.com/mattn/go-sqlite3"
 	"runtime"
@@ -15,12 +17,53 @@ import (
 const mega = 1024 * 1024
 
 type ChatBot struct {
-	PrintMemStats  bool
-	InputAdapter   input.InputAdapter
-	LogicAdapter   logic.LogicAdapter
-	OutputAdapter  output.OutputAdapter
+	PrintMemStats bool
+	//InputAdapter   input.InputAdapter
+	LogicAdapter logic.LogicAdapter
+	//OutputAdapter  output.OutputAdapter
 	StorageAdapter storage.StorageAdapter
 	Trainer        Trainer
+	Config         Config
+}
+
+var engine *xorm.Engine
+
+func (chatbot *ChatBot) Init() {
+	var err error
+	if engine == nil && chatbot.Config.Sqlite3 != "" {
+		engine, err = xorm.NewEngine("sqlite3", chatbot.Config.Sqlite3)
+	}
+
+	engine.Sync2(&Corpus{})
+
+	if err != nil {
+		panic(err)
+	}
+	if chatbot.Config.DirCorpus != "" {
+		files := chatbot.FindCorporaFiles(chatbot.Config.DirCorpus)
+		if len(files) > 0 {
+			corpuses, _ := chatbot.LoadCorpusFromFiles(files)
+			if len(corpuses) > 0 {
+				chatbot.SaveCorpusToDB(corpuses)
+				chatbot.TrainWithDB()
+			}
+		}
+	}
+}
+
+type Corpus struct {
+	Id       int    `json:"id" form:"id" xorm:"int pk autoincr notnull 'id' comment('编号')"`
+	Class    string `json:"class" form:"class"  xorm:"varchar(255) notnull 'class' comment('分类')"`
+	Project  string `json:"project" form:"project" xorm:"varchar(255) notnull 'project' comment('项目')"`
+	Question string `json:"question" form:"question"  xorm:"varchar(512) notnull index  'question' comment('问题')"`
+	Answer   string `json:"answer" form:"answer" xorm:"varchar(102400) notnull  'answer' comment('回答')"`
+	Qtype    int    `json:"qtype" form:"qtype" xorm:"int notnull 'qtype' comment('类型，需求，问答')"`
+}
+
+type Config struct {
+	Sqlite3   string `json:"sqlite3"`
+	Project   string `json:"project"`
+	DirCorpus string `json:"dir_corpus"`
 }
 
 func (chatbot *ChatBot) Train(data interface{}) error {
@@ -58,36 +101,62 @@ CREATE TABLE "chatbot_tab" (
 "qtype" INTEGER
 );
 */
-func LoadCorpusFromSqite(dbpath string, project string) (map[string][][]string, error) {
+func (chatbot *ChatBot) LoadCorpusFromDB() (map[string][][]string, error) {
 	results := make(map[string][][]string)
-	db, err := sql.Open("sqlite3", dbpath)
-	if err != nil {
-		return nil, err
+	var rows []Corpus
+	query := Corpus{
+		Project: chatbot.Config.Project,
 	}
-	rows, err := db.Query("SELECT id,question,answer,class FROM corpus_tab where project=?", project)
+	err := engine.Find(&rows, &query)
 	if err != nil {
 		return nil, err
 	}
 	var corpuses [][]string
-	for rows.Next() {
-		var question string
-		var answer string
-		var class string
-		var id int
+	for _, row := range rows {
 		var corpus []string
-		err = rows.Scan(&id, &question, &answer, &class)
-		if err != nil {
-			return nil, err
-		}
-		corpus = append(corpus, question, answer)
+		corpus = append(corpus, row.Question, row.Answer)
 		corpuses = append(corpuses, corpus)
 	}
-	results[project] = corpuses
+	results[chatbot.Config.Project] = corpuses
 	return results, nil
 
 }
 
-func (chatbot *ChatBot) TrainWithSqite(dbpath string, project string) error {
+func (chatbot *ChatBot) LoadCorpusFromFiles(filePaths []string) (map[string][][]string, error) {
+	return corpus.LoadCorpora(filePaths)
+}
+
+func (chatbot *ChatBot) SaveCorpusToDB(corpuses map[string][][]string) {
+	for k, v := range corpuses {
+		for _, cp := range v {
+			if len(cp) == 2 {
+				corpus := Corpus{
+					Class:    k,
+					Question: cp[0],
+					Answer:   cp[1],
+					Qtype:    1,
+					Project:  chatbot.Config.Project,
+				}
+				chatbot.AddCorpus(corpus)
+			}
+		}
+	}
+
+}
+
+func (chatbot *ChatBot) AddCorpus(corpus Corpus) error {
+	q := Corpus{
+		Question: corpus.Question,
+		Class:    corpus.Class,
+	}
+	if ok, err := engine.Get(&q); !ok {
+		_, err = engine.Insert(&corpus)
+		return err
+	}
+	return nil
+}
+
+func (chatbot *ChatBot) TrainWithDB() error {
 	start := time.Now()
 	defer func() {
 		fmt.Printf("Elapsed: %s\n", time.Since(start))
@@ -105,22 +174,46 @@ func (chatbot *ChatBot) TrainWithSqite(dbpath string, project string) error {
 		}()
 	}
 
-	corpuses,err:=LoadCorpusFromSqite(dbpath, project)
-	if err!=nil {
+	corpuses, err := chatbot.LoadCorpusFromDB()
+	if err != nil {
 		return err
 	}
 
-	fmt.Println(corpuses)
+	if err := chatbot.Trainer.TrainWithCorpus(corpuses); err != nil {
+		return err
+	} else {
+		return nil
+		//return chatbot.StorageAdapter.Sync()
+	}
 
-	//chatbot.Trainer.Train()
+}
 
-	return nil
+func (chatbot *ChatBot) FindCorporaFiles(dir string) []string {
+	var files []string
 
-	//if err := chatbot.Trainer.Train(data); err != nil {
-	//	return err
-	//} else {
-	//	return chatbot.StorageAdapter.Sync()
-	//}
+	jsonFiles, err := filepath.Glob(filepath.Join(dir, "*.json"))
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	files = append(files, jsonFiles...)
+
+	ymlFiles, err := filepath.Glob(filepath.Join(dir, "*.yml"))
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	files = append(files, ymlFiles...)
+
+	yamlFiles, err := filepath.Glob(filepath.Join(dir, "*.yaml"))
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return append(files, yamlFiles...)
 }
 
 func (chatbot *ChatBot) GetResponse(text string) []logic.Answer {

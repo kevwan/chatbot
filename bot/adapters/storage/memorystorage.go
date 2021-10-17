@@ -16,7 +16,7 @@ import (
 const (
 	chunkSize              = 10000
 	topKeywords            = 5
-	thresholdForKeywords   = 5
+	thresholdForKeywords   = 1
 	maxSearchResults       = 100
 	thresholdForStopWords  = 100
 	dictFile               = "dict.txt"
