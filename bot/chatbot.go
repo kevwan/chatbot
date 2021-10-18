@@ -46,9 +46,13 @@ func (chatbot *ChatBot) Init() {
 			corpuses, _ := chatbot.LoadCorpusFromFiles(files)
 			if len(corpuses) > 0 {
 				chatbot.SaveCorpusToDB(corpuses)
-				chatbot.TrainWithDB()
+
 			}
 		}
+	}
+	err = chatbot.TrainWithDB()
+	if err != nil {
+		panic(err)
 	}
 }
 
