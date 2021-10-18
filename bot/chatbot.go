@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-xorm/xorm"
 	"github.com/kevwan/chatbot/bot/corpus"
@@ -137,14 +138,14 @@ func (chatbot *ChatBot) SaveCorpusToDB(corpuses map[string][][]string) {
 					Qtype:    1,
 					Project:  chatbot.Config.Project,
 				}
-				chatbot.AddCorpus(&corpus)
+				chatbot.AddCorpusToDB(&corpus)
 			}
 		}
 	}
 
 }
 
-func (chatbot *ChatBot) AddCorpus(corpus *Corpus) error {
+func (chatbot *ChatBot) AddCorpusToDB(corpus *Corpus) error {
 	q := Corpus{
 		Question: corpus.Question,
 		Class:    corpus.Class,
@@ -158,6 +159,24 @@ func (chatbot *ChatBot) AddCorpus(corpus *Corpus) error {
 			_, err = engine.Update(corpus, &Corpus{Id: q.Id})
 			return err
 		}
+	}
+	return nil
+}
+
+func (chatbot *ChatBot) RemoveCorpusFromDB(corpus *Corpus) error {
+	q := Corpus{}
+	if corpus.Id > 0 {
+		q.Id = corpus.Id
+	} else {
+		if corpus.Question == "" {
+			return errors.New("id or question must be set value")
+		}
+		q.Question = corpus.Question
+	}
+	if ok, err := engine.Get(&q); ok {
+		chatbot.StorageAdapter.Remove(q.Question)
+		engine.Delete(&q)
+		return err
 	}
 	return nil
 }

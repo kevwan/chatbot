@@ -66,7 +66,7 @@ func bindRounter(router *gin.Engine) {
 		var corpus bot.Corpus
 
 		context.Bind(&corpus)
-		err := chatbot.AddCorpus(&corpus)
+		err := chatbot.AddCorpusToDB(&corpus)
 		if err != nil {
 			context.JSON(500, JsonResult{
 				Msg: err.Error(),
@@ -85,8 +85,8 @@ func bindRounter(router *gin.Engine) {
 	})
 
 	v1.GET("search", func(context *gin.Context) {
-		kw := context.Query("kw")
-		results := chatbot.GetResponse(kw)
+		q := context.Query("q")
+		results := chatbot.GetResponse(q)
 		msg := "ok"
 		if len(results) == 0 {
 			msg = "not found"
@@ -96,6 +96,25 @@ func bindRounter(router *gin.Engine) {
 			Msg:  msg,
 			Data: results,
 		})
+	})
+
+	v1.POST("remove", func(context *gin.Context) {
+		var corpus bot.Corpus
+
+		context.Bind(&corpus)
+		err := chatbot.RemoveCorpusFromDB(&corpus)
+		if err != nil {
+			context.JSON(500, JsonResult{
+				Msg: err.Error(),
+			})
+			return
+		}
+		chatbot.StorageAdapter.BuildIndex()
+		context.JSON(200, JsonResult{
+			Code: 0,
+			Msg:  "success",
+		})
+
 	})
 
 }
