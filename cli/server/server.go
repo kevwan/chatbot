@@ -3,11 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/kevwan/chatbot/bot"
 	"github.com/kevwan/chatbot/bot/adapters/logic"
 	"github.com/kevwan/chatbot/bot/adapters/storage"
 	"github.com/sjqzhang/gdi"
+	"net/http"
+	"time"
 )
 
 var chatbot *bot.ChatBot
@@ -16,12 +19,13 @@ var (
 	verbose  = flag.Bool("v", false, "verbose mode")
 	tops     = flag.Int("t", 5, "the number of answers to return")
 	dir      = flag.String("d", "/Users/dev/repo/chatterbot-corpus/chatterbot_corpus/data/chinese", "the directory to look for corpora files")
-	sqliteDB = flag.String("sqlite3", "/Users/dev/repo/chatbot/chatbot.db", "the file path of the corpus sqlite3")
-	//sqliteDB      = flag.String("sqlite3", "", "the file path of the corpus sqlite3")
+	//sqliteDB = flag.String("sqlite3", "/Users/junqiang.zhang/repo/go/chatbot/chatbot.db", "the file path of the corpus sqlite3")
+	sqliteDB      = flag.String("sqlite3", "", "the file path of the corpus sqlite3")
+	bind      = flag.String("b", ":8080", "bind addr")
 	project       = flag.String("project", "DMS", "the name of the project in sqlite3 db")
 	corpora       = flag.String("i", "", "the corpora files, comma to separate multiple files")
 	storeFile     = flag.String("o", "/Users/dev/repo/chatbot/corpus.gob", "the file to store corpora")
-	printMemStats = flag.Bool("m", true, "enable printing memory stats")
+	printMemStats = flag.Bool("m", false, "enable printing memory stats")
 )
 
 type JsonResult struct {
@@ -118,11 +122,25 @@ func bindRounter(router *gin.Engine) {
 	})
 
 }
+
+func Cors() gin.HandlerFunc {
+	return cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"*"},
+		ExposeHeaders:    []string{"Content-Length", "Authorization", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	},
+	)
+}
 func main() {
 	gdi.Init()
 	chatbot.Init()
 	router := gin.Default()
+	router.Use(Cors())
+	router.StaticFS("/static", http.Dir("./static"))
 	bindRounter(router)
-	router.Run(":8080")
+	router.Run(*bind)
 
 }

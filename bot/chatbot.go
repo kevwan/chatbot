@@ -33,6 +33,9 @@ func (chatbot *ChatBot) Init() {
 	var err error
 	if engine == nil && chatbot.Config.Sqlite3 != "" {
 		engine, err = xorm.NewEngine("sqlite3", chatbot.Config.Sqlite3)
+	} else {
+
+		engine, err = xorm.NewEngine("sqlite3", "chatbot.db")
 	}
 
 	engine.Sync2(&Corpus{})

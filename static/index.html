@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat bot</title>
+    <script src="jquery.js?id=1"></script>
+</head>
+<body>
+<div id="main" >
+
+    <div id="left" style="float: left;width: 49%">
+        <span style="display: block;width: 100%;">问题：<input  id="question" name="question"></span>
+        <span style="display: block;width: 100%;:width;">答案：<textarea id="answer" name="answer" rows="10" cols="30"></textarea></span>
+        <span><button id="btnAdd">增加到问题库</button></span>
+
+    </div>
+
+
+    <div id="right" style="float:right;width: 49%">
+    <span style="display: block;width: 100%;">你的问题？：<input  id="q" name=""></span>
+    <span style="display: block;width: 100%;:width;" id="result"></span>
+    <span><button id="btnQuery">获取答案</button></span>
+</div>
+</div>
+
+
+<script>
+    var HOST=window.location.host
+    $(document).ready(function (){
+        $('#btnAdd').click(function (){
+            var data={'question':$('#question').val(),
+            'answer':$('#answer').val(),
+            'project':'DMS','class':'测试','qtype':1}
+            $.post('http://'+HOST+'/v1/add',data,function (resp){
+                if(resp.code==0) {
+                    alert('增加成功！')
+                } else {
+                    alert('增加失败！')
+                }
+            })
+        })
+        $('#btnQuery').click(function (){
+            $.get('http://'+HOST+'/v1/search?q='+$('#q').val(),function (resp){
+                if(resp.code==0) {
+                    var data=resp.data
+                    if (data!=null && data.length>0) {
+                        $('#result').text( data[0].content.split('$$$$')[1])
+                    }
+                }
+            })
+        })
+
+    })
+
+</script>
+
+</body>
+</html>

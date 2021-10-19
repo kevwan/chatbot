@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd // indirect
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-xorm/xorm v0.7.9
 	github.com/mattn/go-sqlite3 v1.14.0
