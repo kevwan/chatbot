@@ -45,7 +45,7 @@ func (trainer *ConversationTrainer) Train(data interface{}) error {
 	}
 
 	if len(sentences) == 2 {
-		sentences[1] = fmt.Sprintf("%s$$$%s", sentences[0], sentences[1])
+		sentences[1] = fmt.Sprintf("%s$$$$%s", sentences[0], sentences[1])
 	}
 
 	var history string
