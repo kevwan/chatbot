@@ -57,12 +57,15 @@ func (chatbot *ChatBot) Init() {
 }
 
 type Corpus struct {
-	Id       int    `json:"id" form:"id" xorm:"int pk autoincr notnull 'id' comment('编号')"`
-	Class    string `json:"class" form:"class"  xorm:"varchar(255) notnull 'class' comment('分类')"`
-	Project  string `json:"project" form:"project" xorm:"varchar(255) notnull 'project' comment('项目')"`
-	Question string `json:"question" form:"question"  xorm:"varchar(512) notnull index  'question' comment('问题')"`
-	Answer   string `json:"answer" form:"answer" xorm:"varchar(102400) notnull  'answer' comment('回答')"`
-	Qtype    int    `json:"qtype" form:"qtype" xorm:"int notnull 'qtype' comment('类型，需求，问答')"`
+	Id          int    `json:"id" form:"id" xorm:"int pk autoincr notnull 'id' comment('编号')"`
+	Class       string `json:"class" form:"class"  xorm:"varchar(255) notnull 'class' comment('分类')"`
+	Project     string `json:"project" form:"project" xorm:"varchar(255) notnull 'project' comment('项目')"`
+	Question    string `json:"question" form:"question"  xorm:"varchar(512) notnull index  'question' comment('问题')"`
+	Answer      string `json:"answer" form:"answer" xorm:"varchar(102400) notnull  'answer' comment('回答')"`
+	Principal   string `json:"principal" form:"principal" xorm:"varchar(256) notnull  'principal' comment('责负人')"`
+	AcceptCount string `json:"accept_count" form:"accept_count" xorm:"int notnull  'accept_count' comment('解决次数')"`
+	RejectCount string `json:"reject_count" form:"reject_count" xorm:"int notnull  'reject_count' comment('解决次数')"`
+	Qtype       int    `json:"qtype" form:"qtype" xorm:"int notnull 'qtype' comment('类型，需求，问答')"`
 }
 
 type Config struct {
