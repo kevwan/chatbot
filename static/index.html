@@ -43,22 +43,17 @@
             })
         })
         $('#q').keyup(function (e) {
-            if (e.keyCode == 13||$('#q').val().length>1) {
+            if (e.keyCode == 13 || $('#q').val().length > 1) {
                 $('#btnQuery').trigger('click')
             }
         })
         $('#btnQuery').click(function () {
             $.get('http://' + HOST + '/v1/search?q=' + $('#q').val() + '？', function (resp) {
                 if (resp.code == 0) {
-                    debugger
+                    // debugger
                     var data = resp.data
                     if (data != null && data.length > 0) {
-                        var result = data[0].content.split('$$$$')
-                        if (result.length > 1) {
-                            $('#result').html('<pre style="color: coral;">我猜你的问题是：' + result[0] + ' </pre> <pre style="width: width:100%;">答案：' + result[1] + '</pre>')
-                        } else {
-                            $('#result').html('<pre style="width: width:100%;">' + result[0] + '</pre>')
-                        }
+                        $('#result').html('<pre style="color: coral;">我猜你的问题是：' + data[0].question + ' </pre> <pre style="width: width:100%;">答案：' + data[0].answer + '</pre>')
                     } else {
                         $('#result').text('没有找到答案。。。')
                     }
