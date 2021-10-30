@@ -1,0 +1,21 @@
+run:
+  skip-dirs:
+    - .*~
+    - data
+  skip-files:
+    - ".*.my.go$"
+    - _test.go
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+  lll:
+    line-length: 240
+  godox:
+    keywords:
+      - BUG
+      - FIXME
+      - OPTIMIZE
+      - HACK
+linters:
+  enable-all: true
