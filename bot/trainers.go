@@ -86,7 +86,9 @@ func (trainer *CorpusTrainer) Train(data interface{}) error {
 
 	for _, convs := range corpora {
 		for _, conv := range convs {
-			convTrainer.Train(conv)
+			if err := convTrainer.Train(conv); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/tal-tech/go-zero/core/lang"
+	"github.com/tal-tech/go-zero/core/logx"
 	"github.com/tal-tech/go-zero/core/mr"
 	"github.com/wangbin/jiebago"
 	"github.com/wangbin/jiebago/analyse"
@@ -43,11 +44,11 @@ type (
 
 func RestoreMemoryStorage(decoder *gob.Decoder) (*memoryStorage, error) {
 	var segmenter jiebago.Segmenter
-	segmenter.LoadDictionary(dictFile)
+	logx.Must(segmenter.LoadDictionary(dictFile))
 	var extracter analyse.TagExtracter
-	extracter.LoadDictionary(dictFile)
-	extracter.LoadIdf(idfFile)
-	extracter.LoadStopWords(stopWordsFile)
+	logx.Must(extracter.LoadDictionary(dictFile))
+	logx.Must(extracter.LoadIdf(idfFile))
+	logx.Must(extracter.LoadStopWords(stopWordsFile))
 
 	var keys []string
 	responses := make(map[string]map[string]int)
@@ -76,11 +77,11 @@ func RestoreMemoryStorage(decoder *gob.Decoder) (*memoryStorage, error) {
 
 func NewMemoryStorage() *memoryStorage {
 	var segmenter jiebago.Segmenter
-	segmenter.LoadDictionary(dictFile)
+	logx.Must(segmenter.LoadDictionary(dictFile))
 	var extracter analyse.TagExtracter
-	extracter.LoadDictionary(dictFile)
-	extracter.LoadIdf(idfFile)
-	extracter.LoadStopWords(stopWordsFile)
+	logx.Must(extracter.LoadDictionary(dictFile))
+	logx.Must(extracter.LoadIdf(idfFile))
+	logx.Must(extracter.LoadStopWords(stopWordsFile))
 
 	return &memoryStorage{
 		segmenter: &segmenter,
@@ -381,24 +382,4 @@ func splitStrings(slice []string, size int) []*keyChunk {
 	}
 
 	return result
-}
-
-func (storage *memoryStorage) print() {
-	fmt.Println("Questions:")
-	for _, key := range storage.keys {
-		fmt.Printf("\t%s\n", key)
-	}
-
-	fmt.Println("Responses:")
-	for key, value := range storage.responses {
-		fmt.Printf("\t%s:\n", key)
-		for text, occurrence := range value {
-			fmt.Printf("\t\t%s:\t%d\n", text, occurrence)
-		}
-	}
-
-	fmt.Println("Indexes:")
-	for key, ids := range storage.indexes {
-		fmt.Printf("\t%s: %v\n", key, ids)
-	}
 }
