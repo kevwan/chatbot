@@ -24,7 +24,7 @@
 
 # corpus files
 data
-**/*.corpus.json
-**/*.yml
-**/*.gob
-**/stopwords.txt
+cli/**/*.yml
+cli/**/*.corpus.json
+cli/**/*.gob
+cli/**/stopwords.txt
