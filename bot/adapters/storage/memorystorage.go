@@ -20,10 +20,10 @@ const (
 	thresholdForKeywords   = 5
 	maxSearchResults       = 100
 	thresholdForStopWords  = 100
-	dictFile               = "dict.txt"
-	idfFile                = "idf.txt"
-	stopWordsFile          = "stop_words.txt"
-	generatedStopWordsFile = "stopwords.txt"
+	dictFile               = "../etc/dict.txt"
+	idfFile                = "../etc/idf.txt"
+	stopWordsFile          = "../etc/stop_words.txt"
+	generatedStopWordsFile = "../etc/stopwords.txt"
 )
 
 type (
