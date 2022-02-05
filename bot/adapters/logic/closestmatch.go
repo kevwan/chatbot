@@ -7,7 +7,7 @@ import (
 
 	"github.com/kevwan/chatbot/bot/adapters/storage"
 	"github.com/kevwan/chatbot/bot/nlp"
-	"github.com/tal-tech/go-zero/core/mr"
+	"github.com/zeromicro/go-zero/core/mr"
 )
 
 const (
@@ -96,7 +96,7 @@ func (match *closestMatch) processExactMatch(responses map[string]int) []Answer 
 
 func (match *closestMatch) processSimilarMatch(text string) []Answer {
 	result, err := mr.MapReduce(generator(match, text), mapper(match), reducer(match))
-	if err != nil{
+	if err != nil {
 		return nil
 	}
 

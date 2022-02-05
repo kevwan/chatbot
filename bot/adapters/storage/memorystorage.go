@@ -7,11 +7,11 @@ import (
 	"os"
 	"sort"
 
-	"github.com/tal-tech/go-zero/core/lang"
-	"github.com/tal-tech/go-zero/core/logx"
-	"github.com/tal-tech/go-zero/core/mr"
 	"github.com/wangbin/jiebago"
 	"github.com/wangbin/jiebago/analyse"
+	"github.com/zeromicro/go-zero/core/lang"
+	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/mr"
 )
 
 const (
