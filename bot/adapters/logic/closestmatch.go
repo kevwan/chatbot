@@ -95,13 +95,12 @@ func (match *closestMatch) processExactMatch(responses map[string]int) []Answer 
 }
 
 func (match *closestMatch) processSimilarMatch(text string) []Answer {
-	result, err := mr.MapReduce(generator(match, text), mapper(match), reducer(match))
+	slice, err := mr.MapReduce(generator(match, text), mapper(match), reducer(match))
 	if err != nil {
 		return nil
 	}
 
 	var answers []Answer
-	slice := result.([]questionAndScore)
 	for _, each := range slice {
 		if each.score > 0 {
 			if responses, ok := match.storage.Find(each.question); ok {
@@ -145,8 +144,8 @@ func (top *topOccurAnswers) put(answer string, occurrence int) {
 	}
 }
 
-func generator(match *closestMatch, text string) mr.GenerateFunc {
-	return func(source chan<- interface{}) {
+func generator(match *closestMatch, text string) mr.GenerateFunc[sourceAndTargets] {
+	return func(source chan<- sourceAndTargets) {
 		keys := match.storage.Search(text)
 		if match.verbose {
 			printMatches(keys)
@@ -162,10 +161,9 @@ func generator(match *closestMatch, text string) mr.GenerateFunc {
 	}
 }
 
-func mapper(match *closestMatch) mr.MapperFunc {
-	return func(data interface{}, writer mr.Writer, cancel func(error)) {
+func mapper(match *closestMatch) mr.MapperFunc[sourceAndTargets, *topScoreQuestions] {
+	return func(pair sourceAndTargets, writer mr.Writer[*topScoreQuestions], cancel func(error)) {
 		tops := newTopScoreQuestions(match.tops)
-		pair := data.(sourceAndTargets)
 		for i := range pair.targets {
 			score := nlp.SimilarityForStrings(pair.source, pair.targets[i])
 			tops.add(questionAndScore{
@@ -178,11 +176,10 @@ func mapper(match *closestMatch) mr.MapperFunc {
 	}
 }
 
-func reducer(match *closestMatch) mr.ReducerFunc {
-	return func(input <-chan interface{}, writer mr.Writer, cancel func(error)) {
+func reducer(match *closestMatch) mr.ReducerFunc[*topScoreQuestions, []questionAndScore] {
+	return func(input <-chan *topScoreQuestions, writer mr.Writer[[]questionAndScore], cancel func(error)) {
 		tops := newTopScoreQuestions(match.tops)
-		for each := range input {
-			qs := each.(*topScoreQuestions)
+		for qs := range input {
 			for _, question := range qs.questions {
 				tops.add(question)
 			}

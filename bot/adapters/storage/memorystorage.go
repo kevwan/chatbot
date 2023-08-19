@@ -178,7 +178,7 @@ func (storage *memoryStorage) buildKeys() []string {
 }
 
 func (storage *memoryStorage) buildIndex(keys []string) map[string][]int {
-	channel := make(chan interface{})
+	channel := make(chan *keyChunk)
 
 	go func() {
 		chunks := splitStrings(keys, chunkSize)
@@ -188,7 +188,7 @@ func (storage *memoryStorage) buildIndex(keys []string) map[string][]int {
 		close(channel)
 	}()
 
-	result, err := mr.MapReduce(func(source chan<- interface{}) {
+	result, err := mr.MapReduce(func(source chan<- *keyChunk) {
 		chunks := splitStrings(keys, chunkSize)
 		for i := range chunks {
 			source <- chunks[i]
@@ -199,7 +199,7 @@ func (storage *memoryStorage) buildIndex(keys []string) map[string][]int {
 		return nil
 	}
 
-	return result.(map[string][]int)
+	return result
 }
 
 func (storage *memoryStorage) saveStopWords() {
@@ -301,9 +301,8 @@ func (storage *memoryStorage) generateSearchResults(ids []int) []string {
 	return result
 }
 
-func (storage *memoryStorage) mapper(data interface{}, writer mr.Writer, cancel func(error)) {
+func (storage *memoryStorage) mapper(chunk *keyChunk, writer mr.Writer[map[string][]int], cancel func(error)) {
 	indexes := make(map[string][]int)
-	chunk := data.(*keyChunk)
 
 	for i := range chunk.keys {
 		collector := func(word string) {
@@ -333,10 +332,9 @@ func (storage *memoryStorage) mapper(data interface{}, writer mr.Writer, cancel 
 	writer.Write(indexes)
 }
 
-func (storage *memoryStorage) reducer(input <-chan interface{}, writer mr.Writer, cancel func(error)) {
+func (storage *memoryStorage) reducer(input <-chan map[string][]int, writer mr.Writer[map[string][]int], cancel func(error)) {
 	indexes := make(map[string]map[int]struct{})
-	for each := range input {
-		chunkIndexes := each.(map[string][]int)
+	for chunkIndexes := range input {
 		for key, ids := range chunkIndexes {
 			mapping, ok := indexes[key]
 			if !ok {
